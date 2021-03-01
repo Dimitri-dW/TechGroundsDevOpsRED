@@ -1,0 +1,16 @@
+import base64
+import boto3
+import json
+s3 = boto3.client('s3')
+def lambda_handler(event, context):
+    response = s3.get_object(
+        Bucket='BUCKET-NAME',
+        Key='FILE-NAME',
+    )
+    image = response['Body'].read()
+    return {
+        'headers': { "Content-Type": "image/jpg" },
+        'statusCode': 200,
+        'body': base64.b64encode(image).decode('utf-8'),
+        'isBase64Encoded': True
+    }
