@@ -27,4 +27,24 @@ exports.handler = (event, context, callback) => {
       callback(null, response);
     }
   });
+
+  var params = {
+    "Bucket": "find-my-mate-hasangi",
+    "Key": event.queryStringParameters.key  
+      };
+      s3.getObject(params, function(err, data){
+         if(err) {
+             callback(err, null);
+         } else {
+             let response = {
+          "statusCode": 200,
+          "headers": {
+              "my_header": "my_value"
+          },
+          "body": JSON.stringify(data),
+          "isBase64Encoded": false
+      };
+             callback(null, response);
+      }
+      });  
 };
