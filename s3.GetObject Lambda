@@ -4,8 +4,8 @@ import json
 s3 = boto3.client('s3')
 def lambda_handler(event, context):
     response = s3.get_object(
-        Bucket='BUCKET-NAME',
-        Key='FILE-NAME',
+        Bucket='redcats',
+        Key='normal/kat_foto_1.jpg',
     )
     image = response['Body'].read()
     return {

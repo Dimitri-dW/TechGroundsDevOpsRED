@@ -1,17 +1,22 @@
-import json
-import boto3
-import base64
+const AWS = require("aws-sdk");
+var s3 = new AWS.S3();
 
-s3 = boto3.client('s3')
-
-def lambda_handler(event, context):
-    print event
-    if event['httpMethod'] == 'POST' : 
-        print event['body']
-        data = json.loads(event['body'])
-        name = data['name']
-        image = data['file']
-        image = image[image.find(",")+1:]
-        dec = base64.b64decode(image + "===")
-        s3.put_object(Bucket='upload-to-s3-project', Key=name, Body=dec)
-        return {'statusCode': 200, 'body': json.dumps({'message': 'successful lambda function call'}), 'headers': {'Access-Control-Allow-Origin': '*'}}
+module.exports.handler = (event, context, callback) => {
+  var buf = Buffer.from(event.body.replace(/^data:image\/\w+;base64,/, ""),"base64");
+  var data = {
+    Bucket: "redcats", 
+    Key: Date.now()+"", 
+    Body: buf,
+    ContentType: 'image/png',
+    ACL: 'public-read'
+  };
+  s3.putObject(data, function(err, data){
+      if (err) { 
+        console.log(err);
+        console.log('Error uploading data: ', data); 
+      } else {
+        console.log('succesfully uploaded the image!');
+      }
+      callback(null,data);
+  });
+};
