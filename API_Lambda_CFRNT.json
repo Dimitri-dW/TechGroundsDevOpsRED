@@ -71,13 +71,13 @@
 "APIFunction": {
 	"Type": "AWS::Lambda::Function",
 	"Properties": {
-		"FunctionName": "GetVehicle",
-		"Description": "Function to Get Vehicle Image from S3 Bucket",
+		"FunctionName": "redcat-GETurl",
+		"Description": "Function to Get cat Image from S3 Bucket",
 		"Code": {
-			"S3Bucket": "car-images-hd",
-			"S3Key": "Get_Car.zip"
+			"S3Bucket": "redcats",
+			"S3Key": "infrafiles/s3.GetObjectURL.zip"
 		},
-		"Handler": "Get_Car.get_car",
+		"Handler": "s3.GetObjectURL.s3.getobjecturl",
 		"Runtime": "python3.6",
 		"MemorySize": 1024,
 		"Role": {"Fn::GetAtt": ["IAMLambdaServiceRole", "Arn"]},
@@ -87,22 +87,22 @@
 "RestAPI": {
 "Type" : "AWS::ApiGateway::RestApi",
 "Properties" : {
-    "Description" : "API to get Car Image",
-    "Name" : "Get_Car API",
+    "Description" : "API to get Cat Image",
+    "Name" : "Get_Cat API",
 	"EndpointConfiguration": {"Types" : ["REGIONAL"]},
     "Body" : {
 "swagger": "2.0",
 "info": {
-"description": "API to return Car Image",
+"description": "API to return Cat Image",
 "version": "1.0.0",
-"title": "Get_Car API"
+"title": "Get_Cat API"
 },
 "schemes": [
 "https"
 ],
 "paths": {
 "/": {},
-"/get_car": {
+"/get_cat": {
 "post": {
 "produces": [
 "application/json",
@@ -178,14 +178,14 @@
 "RestAPICaller": {
 	"Type": "AWS::IAM::User",
 	"Properties": {
-		"UserName": "Get_Car_Caller"
+		"UserName": "Get_Cat_Caller"
 	}
 },
 "RestAPICallerManagedPolicy": {
 		"Type": "AWS::IAM::ManagedPolicy",
 		"DependsOn": ["RestAPI","APIFunction","RestAPICaller"],
 		"Properties": {
-			"Description": "Get_Car API Caller",
+			"Description": "Get_Cat API Caller",
 			"PolicyDocument": {
 				"Version": "2012-10-17",
 				"Statement": [
@@ -205,11 +205,11 @@
 						"Sid": "RestAPICaller003",
 						"Effect": "Allow",
 						"Action": "s3:GetObject",
-						"Resource":  "arn:aws:s3:::car-images-hd/*"
+						"Resource":  "arn:aws:s3:::redcats/*"
 					}
 				]
 			},
-			"Users": ["Get_Car_Caller"],
+			"Users": ["Get_Cat_Caller"],
 			"ManagedPolicyName": "API_Caller_Policy"
 		}
 },
@@ -266,7 +266,7 @@
 		"BucketPolicy": {
       "Type": "AWS::S3::BucketPolicy",
       "Properties": {
-        "Bucket": "car-images-hd",
+        "Bucket": "redcats",
         "PolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -275,7 +275,7 @@
               "Action": [
                 "s3:GetObject"
               ],
-              "Resource": "arn:aws:s3:::car-images-hd/*",
+              "Resource": "arn:aws:s3:::redcats/*",
               "Condition": {},
               "Principal": {
                 "AWS": [
