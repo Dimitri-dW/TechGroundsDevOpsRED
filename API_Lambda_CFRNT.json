@@ -88,14 +88,14 @@
 "Type" : "AWS::ApiGateway::RestApi",
 "Properties" : {
     "Description" : "API to get Cat Image",
-    "Name" : "Get_Cat API",
+    "Name" : "RedCatsAPI",
 	"EndpointConfiguration": {"Types" : ["REGIONAL"]},
     "Body" : {
 "swagger": "2.0",
 "info": {
 "description": "API to return Cat Image",
 "version": "1.0.0",
-"title": "Get_Cat API"
+"title": "RedCatsAPI"
 },
 "schemes": [
 "https"
@@ -185,7 +185,7 @@
 		"Type": "AWS::IAM::ManagedPolicy",
 		"DependsOn": ["RestAPI","APIFunction","RestAPICaller"],
 		"Properties": {
-			"Description": "Get_Cat API Caller",
+			"Description": "RedCatsAPI Caller",
 			"PolicyDocument": {
 				"Version": "2012-10-17",
 				"Statement": [
@@ -286,7 +286,7 @@
                         "arn:aws:iam:",
                         {
                           "Ref": "AWS::AccountId"
-                        }, "user/Get_Car_Caller"
+                        }, "user/Get_Cat_Caller"
                       ]
                     ]
                   }
