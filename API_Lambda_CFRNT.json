@@ -72,7 +72,7 @@
 	"Type": "AWS::Lambda::Function",
 	"Properties": {
 		"FunctionName": "redcat-GETurl",
-		"Description": "Function to Get cat Image from S3 Bucket",
+		"Description": "Function to Get cat Image URL from S3 Bucket",
 		"Code": {
 			"S3Bucket": "redcats",
 			"S3Key": "infrafiles/s3.GetObjectURL.zip"
@@ -87,7 +87,7 @@
 "RestAPI": {
 "Type" : "AWS::ApiGateway::RestApi",
 "Properties" : {
-    "Description" : "API to get Cat Image",
+    "Description" : "Team-Red///Project-DevOps",
     "Name" : "RedCatsAPI",
 	"EndpointConfiguration": {"Types" : ["REGIONAL"]},
     "Body" : {
@@ -315,7 +315,7 @@
                        "ResourcePath": "/*"
                      }],
                      "RestApiId": {"Ref": "RestAPI"},
-                     "StageName": "dev"
+                     "StageName": "development"
                    }
                  },
                "RestAPIDeployment": {
@@ -323,7 +323,7 @@
 								 "DependsOn": ["RestAPI"],
                  "Properties": {
                    "RestApiId": {"Ref": "RestAPI"},
-                   "StageName": "dummy"
+                   "StageName": "deployment"
         }
       }
   }
