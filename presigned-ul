@@ -3,7 +3,7 @@ import time
 
 def lambda_handler(event, context):
     ts = str(time.time())
-    bucket = 'onnocats'
+    bucket = '//bucketname//'
     upload_key = 'cat'+ ts +'.jpg'
     s3 = boto3.client('s3')
     

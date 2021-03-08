@@ -3,7 +3,7 @@ import json
 from boto3 import client
 
 bucket = client('s3')
-bucket_name = 'onnocats'
+bucket_name = '//bucketname//'
 
 def lambda_handler(event, context):
     output = []

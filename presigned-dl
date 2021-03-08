@@ -4,7 +4,7 @@ import boto3
 def lambda_handler(event,context):
     
     # Setting Variables
-    bucket_name = "onnocats"
+    bucket_name = "//bucketname//"
     catkey = event["queryStringParameters"]["key"]
     s3_client = boto3.client('s3')
     
@@ -18,4 +18,3 @@ def lambda_handler(event,context):
     return {
         'body': json.dumps({'Pre-signed url': url})
     }
-
