@@ -1,0 +1,917 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: redcats Gateway and Lambda function
+Parameters:
+  apiGatewayName:
+    Type: String
+    Default: redcatsAPIname
+    Description: Create new api gateway
+  apiGatewayStageName:
+    Type: String
+    AllowedPattern: '[a-z0-9]+'
+    Default: development
+    Description: Create deployment stage
+  apiGatewayHTTPMethod:
+    Type: String
+    Default: GET
+  lambdaFunctionNameList:
+    Type: String
+    AllowedPattern: '[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+'
+    Default: redcatslist
+  lambdaFunctionmetadata:
+    Type: String
+    AllowedPattern: '[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+'
+    Default: metadata
+    Description: function name for metadata list
+  S3bucketorginal:
+    Type: String
+    Default: s3redcatsorginal
+    Description: Create s3 bucket for orginal files
+  S3bucketThumbnail:
+    Type: String
+    Default: s3redcatsthumbnail
+    Description: Create s3 bucket for thumbnails
+  DynamoDBdatabaseMetadata:
+    Type: String
+    Default: redcatsdb
+    Description: Create DynamoDB database
+  maxDimensionThumbnails:
+    Default: 320
+    Type: Number
+    Description: Maximum dimension length in pixels
+Resources:
+  Apilist:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      PathPart: list
+      RestApiId: !Ref apiGateway
+      ParentId: !GetAtt 
+        - apiGateway
+        - RootResourceId
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+  Apidownload:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      PathPart: download
+      RestApiId: !Ref apiGateway
+      ParentId: !GetAtt 
+        - apiGateway
+        - RootResourceId
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 6fc0c696-cc4a-4507-9815-ced93c9c9d4f
+  Apidownloadmethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      HttpMethod: ANY
+      RestApiId: !Ref apiGateway
+      ResourceId: !Ref Apidownload
+      AuthorizationType: NONE
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: !Ref Apimodel
+      RequestModels:
+        application/json: !Ref Apimodel
+      Integration:
+        Type: AWS
+        Credentials: !GetAtt 
+          - lambdaIAMRole
+          - Arn
+        Uri: !Sub 
+          - >-
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt 
+              - S3DownFunction
+              - Arn
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: c0939f58-4263-4bc6-a554-267ccbf9470e
+  S3DownFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        ZipFile: !Sub |
+          import logging
+          import boto3
+          from botocore.exceptions import ClientError
+          import json
+          import urllib
+          def lambda_handler(event, context):
+              s3_client = boto3.client('s3')
+              try:
+                  bucket_name= '${S3bucketorginal}'
+                  presigned_download_url = s3_client.generate_presigned_url(
+                          ClientMethod='get_object', ExpiresIn=18000,
+                          Params={
+                              'Bucket': bucket_name,
+                              'Key': event['object_id'],
+                              
+                              })    
+              except ClientError as e:
+                  logging.error(e)
+                  return None
+
+              return {
+              "isBase64Encoded": False,
+              "statusCode": 200,
+              "headers": { "Access-Control-Allow-Origin": "*"},
+              "body": presigned_download_url
+              }
+      Handler: index.lambda_handler
+      Runtime: python3.8
+      MemorySize: 128
+      Role: !GetAtt 
+        - lambdaIAMRole
+        - Arn
+      FunctionName: S3DownFunction
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 4b46c651-9767-46f1-b7b6-72c599dac30f
+  Apiupload:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      PathPart: upload
+      RestApiId: !Ref apiGateway
+      ParentId: !GetAtt 
+        - apiGateway
+        - RootResourceId
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: ec8e9a1b-b8cf-402f-89d1-837cb867a044
+  Apiuploadmethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      HttpMethod: ANY
+      RestApiId: !Ref apiGateway
+      ResourceId: !Ref Apiupload
+      AuthorizationType: NONE
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: !Ref Apimodel
+      RequestModels:
+        application/json: !Ref Apimodel
+      Integration:
+        Type: AWS
+        Credentials: !GetAtt 
+          - lambdaIAMRole
+          - Arn
+        Uri: !Sub 
+          - >-
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt 
+              - S3UpFunction
+              - Arn
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 7d389027-16b3-4842-990a-8710a7248023
+  S3UpFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        ZipFile: !Sub |
+          import logging
+          import boto3
+          from botocore.exceptions import ClientError
+          import json
+          import datetime
+          import random
+          from random import randint
+
+          def lambda_handler(event, context):
+              s3_client = boto3.client('s3')
+              try:
+                  bucket_name= '${S3bucketorginal}'
+                  random_object_id= str(randint(0, 1000000))+'.jpg'
+                  object_url = 'https://${S3bucketorginal}.s3.amazonaws.com/'+random_object_id
+                  upload_time = str(datetime.datetime.today())
+                  cat_colour = event['cat_colour']
+                  upload_id = event['user_id']
+                  
+                  presigned_upload_url = s3_client.generate_presigned_url(
+                          ClientMethod='put_object',
+                          Params={
+                              'Bucket': bucket_name,
+                              'Key': random_object_id,
+                              'ACL':'private',
+                              'ContentType': 'image/jpeg',
+                              'Expires': 8000,
+                              'Metadata':{ 
+                                  'upload_time': upload_time,
+                                  'upload_id':upload_id,
+                                  'cat_colour':cat_colour,
+                                  'url_object': object_url
+                              }
+                  }
+              )    
+              except ClientError as e:
+                  logging.error(e)
+                  return None
+              print(presigned_upload_url)
+              return {
+              "isBase64Encoded": False,
+              "statusCode": 200,
+              "headers": { 'Access-Control-Allow-Origin': '*'},
+              "body": presigned_upload_url
+              }
+      Handler: index.lambda_handler
+      Runtime: python3.8
+      MemorySize: 128
+      Role: !GetAtt 
+        - lambdaIAMRole
+        - Arn
+      FunctionName: S3UpFunction
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: a963b568-5166-44fc-aba8-b9ad0a627241
+  Apithumbnail:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      PathPart: thumbnail
+      RestApiId: !Ref apiGateway
+      ParentId: !GetAtt 
+        - apiGateway
+        - RootResourceId
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: e5b779ca-b538-47f0-8992-7cd278b618cc
+  Apidynamodb:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      PathPart: dynamodb
+      RestApiId: !Ref apiGateway
+      ParentId: !GetAtt 
+        - apiGateway
+        - RootResourceId
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 3dd697b1-4c8b-44f3-89e2-b7835f4d8f93
+  apiGatewayRootMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: !Ref apiGatewayHTTPMethod
+      Integration:
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+        Credentials: !GetAtt 
+          - lambdaIAMRole
+          - Arn
+        Type: AWS
+        Uri: !Sub 
+          - >-
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt 
+              - lambdaFunction
+              - Arn
+      ResourceId: !Ref Apidynamodb
+      RestApiId: !Ref apiGateway
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: !Ref Apimodel
+      RequestModels:
+        application/json: !Ref Apimodel
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 8ff3b717-deb4-4ae6-b506-69ff0130e1f5
+  Apimodel:
+    Type: 'AWS::ApiGateway::Model'
+    Properties:
+      Name: gatewaymodel
+      ContentType: application/json
+      RestApiId: !Ref apiGateway
+      Schema: {}
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: c53e43cf-35a7-48b4-b181-e5613860fb72
+  Catconnectbucketcloudformation:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Function: !GetAtt 
+              - transform
+              - Arn
+            Event: 's3:ObjectCreated:*'
+      BucketName: !Ref S3bucketorginal
+      AccessControl: Private
+    DependsOn:
+      - transformuploadPermission
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 55ec2fcf-dd70-4513-8f7c-22052670cabc
+  transformuploadPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      SourceAccount: !Ref 'AWS::AccountId'
+      FunctionName: !Ref transform
+      Principal: s3.amazonaws.com
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 102a124e-08ae-4500-ab02-0f9f5fb763e0
+  transform:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        S3Bucket: awsserverlessrepo-changesets-18ssd5swmy82n
+        S3Key: >-
+          307624291587/arn:aws:serverlessrepo:us-east-1:233054207705:applications-resize-versions-1.1.0/2121aac2-1db8-413f-a3e1-2a0be88a6522
+      Description: Transforms images by resizing to a configured max dimension
+      Tags:
+        - Value: SAM
+          Key: 'lambda:createdBy'
+      MemorySize: 1536
+      Environment:
+        Variables:
+          DEST_BUCKET: !Ref S3bucketThumbnail
+          MAX_DIMENSION: !Ref maxDimensionThumbnails
+      Handler: src/index.handler
+      Role: !GetAtt 
+        - transformRole
+        - Arn
+      Timeout: 300
+      Runtime: nodejs12.x
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: f90f7c96-8494-4c83-bddf-f92e5bc63b3b
+  transformRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: transformRolePolicy0
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - 's3:GetObject'
+                  - 's3:ListBucket'
+                  - 's3:GetBucketLocation'
+                  - 's3:GetObjectVersion'
+                  - 's3:GetLifecycleConfiguration'
+                Resource:
+                  - !Sub 
+                    - 'arn:${AWS::Partition}:s3:::${bucketName}'
+                    - bucketName: !Ref S3bucketorginal
+                  - !Sub 
+                    - 'arn:${AWS::Partition}:s3:::${bucketName}/*'
+                    - bucketName: !Ref S3bucketorginal
+                Effect: Allow
+        - PolicyName: transformRolePolicy1
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - 's3:GetObject'
+                  - 's3:ListBucket'
+                  - 's3:GetBucketLocation'
+                  - 's3:GetObjectVersion'
+                  - 's3:PutObject'
+                  - 's3:PutObjectAcl'
+                  - 's3:GetLifecycleConfiguration'
+                  - 's3:PutLifecycleConfiguration'
+                  - 's3:DeleteObject'
+                Resource:
+                  - !Sub 
+                    - 'arn:${AWS::Partition}:s3:::${bucketName}'
+                    - bucketName: !Ref S3bucketThumbnail
+                  - !Sub 
+                    - 'arn:${AWS::Partition}:s3:::${bucketName}/*'
+                    - bucketName: !Ref S3bucketThumbnail
+                Effect: Allow
+      Tags:
+        - Value: DevOps
+          Key: project
+        - Value: Red
+          Key: Team
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 2ffc9b62-40c2-481e-aa3a-eee36a3f7a79
+  Catconnectthumbnailscloudformation:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref S3bucketThumbnail
+      AccessControl: Private
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 10a567e0-1bb2-4e12-8515-0b839e53e863
+  dbcatconnect:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: !Ref DynamoDBdatabaseMetadata
+      KeySchema:
+        HashKeyElement:
+          AttributeName: picture_id
+          AttributeType: S
+      ProvisionedThroughput:
+        ReadCapacityUnits: '5'
+        WriteCapacityUnits: '5'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 99855e39-d55e-4229-8310-814e8b611398
+  apiGateway:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Description: catconnect API Gateway
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Name: !Ref apiGatewayName
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+  apiGatewayDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    DependsOn:
+      - apiGatewayRootMethod
+      - Apiuploadmethod
+      - Apidownloadmethod
+    Properties:
+      RestApiId: !Ref apiGateway
+      StageName: !Ref apiGatewayStageName
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 20c9ff91-5073-4508-8aa3-1d80f0540a21
+  lambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        ZipFile: !Sub |
+          import boto3
+          import json
+          from boto3 import client
+
+          s3=client('s3')
+          def handler(event,context):
+              try:
+                  list=[]
+                  for key in s3.list_objects(Bucket='s3catconnectorginal')['Contents']:
+                      list.append((key['Key']))
+              except:
+                  return {"Bucket":"empty"}
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps(list)
+              }
+      Description: List Lambda fucntion cloud formation
+      FunctionName: !Ref lambdaFunctionNameList
+      Handler: index.handler
+      MemorySize: 128
+      Role: !GetAtt 
+        - lambdaIAMRole
+        - Arn
+      Runtime: python3.8
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 0b9ba5a2-0990-460f-939f-fe787685e041
+  lambdaApiGatewayInvoke:
+    Type: 'AWS::Lambda::Permission'
+    DependsOn:
+      - lambdaFunction
+      - apiGateway
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !GetAtt 
+        - lambdaFunction
+        - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub >-
+        arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${apiGateway}/${apiGatewayStageName}/${apiGatewayHTTPMethod}/
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 7195937a-ec31-467d-bbc8-f8268338b81f
+  lambdaIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - apigateway.amazonaws.com
+                - s3.amazonaws.com
+      Policies:
+        - PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Effect: Allow
+                Resource:
+                  - !Sub >-
+                    arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${lambdaFunctionNameList}:*
+          PolicyName: lambda
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
+        - 'arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess'
+        - 'arn:aws:iam::aws:policy/AWSLambda_FullAccess'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 93390649-08bd-4d7d-8d16-1723d3d9d4dc
+Outputs:
+  apiGatewayInvokeURL:
+    Value: !Sub >-
+      https://${apiGateway}.execute-api.${AWS::Region}.amazonaws.com/${apiGatewayStageName}
+  lambdaArn:
+    Value: !GetAtt 
+      - lambdaFunction
+      - Arn
+Metadata:
+  'AWS::CloudFormation::Designer':
+    93390649-08bd-4d7d-8d16-1723d3d9d4dc:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 450
+        'y': 90
+      z: 1
+      embeds: []
+    0b9ba5a2-0990-460f-939f-fe787685e041:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 450
+        'y': 210
+      z: 1
+      embeds: []
+    7195937a-ec31-467d-bbc8-f8268338b81f:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 450
+        'y': 330
+      z: 1
+      embeds: []
+      dependson:
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 0b9ba5a2-0990-460f-939f-fe787685e041
+    8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b:
+      size:
+        width: 510
+        height: 290
+      position:
+        x: 570
+        'y': 270
+      z: 1
+      embeds:
+        - c53e43cf-35a7-48b4-b181-e5613860fb72
+        - 3dd697b1-4c8b-44f3-89e2-b7835f4d8f93
+        - e5b779ca-b538-47f0-8992-7cd278b618cc
+        - ec8e9a1b-b8cf-402f-89d1-837cb867a044
+        - 6fc0c696-cc4a-4507-9815-ced93c9c9d4f
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 20c9ff91-5073-4508-8aa3-1d80f0540a21
+    8ff3b717-deb4-4ae6-b506-69ff0130e1f5:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 620
+        'y': 430
+      z: 3
+      parent: 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+      embeds: []
+      isassociatedwith:
+        - c53e43cf-35a7-48b4-b181-e5613860fb72
+      iscontainedinside:
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+        - 59a4c1de-28fc-4e89-abda-73a2dbf7c3d4
+    20c9ff91-5073-4508-8aa3-1d80f0540a21:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 950
+        'y': 450
+      z: 2
+      parent: 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+      embeds: []
+      iscontainedinside:
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+      dependson:
+        - 8ff3b717-deb4-4ae6-b506-69ff0130e1f5
+        - 7d389027-16b3-4842-990a-8710a7248023
+        - c0939f58-4263-4bc6-a554-267ccbf9470e
+    99855e39-d55e-4229-8310-814e8b611398:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 540
+        'y': 90
+      z: 1
+      embeds: []
+    10a567e0-1bb2-4e12-8515-0b839e53e863:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 660
+        'y': 90
+      z: 1
+      embeds: []
+    c53e43cf-35a7-48b4-b181-e5613860fb72:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 850
+        'y': 440
+      z: 2
+      parent: 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+      embeds: []
+      iscontainedinside:
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+    ec8e9a1b-b8cf-402f-89d1-837cb867a044:
+      size:
+        width: 90
+        height: 100
+      position:
+        x: 720
+        'y': 410
+      z: 2
+      parent: 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+      embeds:
+        - 7d389027-16b3-4842-990a-8710a7248023
+      iscontainedinside:
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+    6fc0c696-cc4a-4507-9815-ced93c9c9d4f:
+      size:
+        width: 80
+        height: 90
+      position:
+        x: 630
+        'y': 300
+      z: 2
+      parent: 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+      embeds:
+        - c0939f58-4263-4bc6-a554-267ccbf9470e
+      iscontainedinside:
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+    59a4c1de-28fc-4e89-abda-73a2dbf7c3d4:
+      size:
+        width: 100
+        height: 100
+      position:
+        x: 610
+        'y': 400
+      z: 2
+      parent: 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+      embeds:
+        - 8ff3b717-deb4-4ae6-b506-69ff0130e1f5
+      iscontainedinside:
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+    2ffc9b62-40c2-481e-aa3a-eee36a3f7a79:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 750
+        'y': 90
+      z: 1
+      embeds: []
+    f90f7c96-8494-4c83-bddf-f92e5bc63b3b:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 870
+        'y': 90
+      z: 1
+      embeds: []
+    102a124e-08ae-4500-ab02-0f9f5fb763e0:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 990
+        'y': 90
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - f90f7c96-8494-4c83-bddf-f92e5bc63b3b
+    55ec2fcf-dd70-4513-8f7c-22052670cabc:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 870
+        'y': 180
+      z: 1
+      embeds: []
+      dependson:
+        - 102a124e-08ae-4500-ab02-0f9f5fb763e0
+    a963b568-5166-44fc-aba8-b9ad0a627241:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 1080
+        'y': 90
+      z: 1
+      embeds: []
+    7d389027-16b3-4842-990a-8710a7248023:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 740
+        'y': 430
+      z: 3
+      parent: ec8e9a1b-b8cf-402f-89d1-837cb867a044
+      embeds: []
+      isassociatedwith:
+        - c53e43cf-35a7-48b4-b181-e5613860fb72
+      iscontainedinside:
+        - ec8e9a1b-b8cf-402f-89d1-837cb867a044
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - ec8e9a1b-b8cf-402f-89d1-837cb867a044
+        - ec8e9a1b-b8cf-402f-89d1-837cb867a044
+        - ec8e9a1b-b8cf-402f-89d1-837cb867a044
+        - ec8e9a1b-b8cf-402f-89d1-837cb867a044
+        - ec8e9a1b-b8cf-402f-89d1-837cb867a044
+        - ec8e9a1b-b8cf-402f-89d1-837cb867a044
+        - ec8e9a1b-b8cf-402f-89d1-837cb867a044
+    4b46c651-9767-46f1-b7b6-72c599dac30f:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 330
+        'y': 90
+      z: 1
+      embeds: []
+    c0939f58-4263-4bc6-a554-267ccbf9470e:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 650
+        'y': 320
+      z: 3
+      parent: 6fc0c696-cc4a-4507-9815-ced93c9c9d4f
+      embeds: []
+      isassociatedwith:
+        - c53e43cf-35a7-48b4-b181-e5613860fb72
+      iscontainedinside:
+        - 6fc0c696-cc4a-4507-9815-ced93c9c9d4f
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 6fc0c696-cc4a-4507-9815-ced93c9c9d4f
+        - 6fc0c696-cc4a-4507-9815-ced93c9c9d4f
+        - 6fc0c696-cc4a-4507-9815-ced93c9c9d4f
+        - 6fc0c696-cc4a-4507-9815-ced93c9c9d4f
+        - 6fc0c696-cc4a-4507-9815-ced93c9c9d4f
+    3dd697b1-4c8b-44f3-89e2-b7835f4d8f93:
+      size:
+        width: 90
+        height: 80
+      position:
+        x: 710
+        'y': 300
+      z: 2
+      parent: 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+      embeds: []
+      iscontainedinside:
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+    e5b779ca-b538-47f0-8992-7cd278b618cc:
+      size:
+        width: 80
+        height: 80
+      position:
+        x: 810
+        'y': 300
+      z: 2
+      parent: 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+      embeds: []
+      iscontainedinside:
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
+        - 8ee5f2a1-2e0d-45d5-a701-3d7f2a91e86b
