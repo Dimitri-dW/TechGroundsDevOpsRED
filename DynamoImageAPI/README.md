@@ -32,7 +32,11 @@ $ npm install serverless -g
 
 
 
-   
+   ### The Response Will be:
+   `{
+    "message": "Sucessfully submitted Image with title cat red",
+    "imageId": "9b801430-831b-11eb-b4ba-8b6523e34f17"
+}`
 
 
 ## Get All Images
