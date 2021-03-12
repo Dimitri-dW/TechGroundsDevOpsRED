@@ -21,6 +21,9 @@ $ npm install serverless -g
 
 ## Create a REST Resource for Submitting Images
 
+
+### To deploy the function, execute serverless deploy command.
+
 `sls deploy`
 
 ## Saving Image Data to DynamoDB
