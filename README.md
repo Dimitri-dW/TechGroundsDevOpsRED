@@ -3,7 +3,7 @@
 This Project application shows how to upload objects to S3 directly from your end-user application using Signed URLs.
 
 
-![alt text](https://github.com/Dimitri-dW/TechGroundsDevOpsRED/blob/iyadDev/images/SolutionDiagram.png)
+![alt text](https://github.com/Dimitri-dW/TechGroundsDevOpsRED/blob/iyadDev/ScreenShoots/SolutionDiagram.png)
 
 
 
@@ -44,23 +44,23 @@ This takes several minutes to deploy. At the end of the deployment, note the out
 1. First, copy the API endpoint from the output of the deployment.
 2. In the Postman interface, paste the API endpoint into the box labeled Enter request URL.
 3. Choose Send
-![alt text](https://github.com/Dimitri-dW/TechGroundsDevOpsRED/blob/iyadDev/images/s3-4%20(1).png)
+![alt text](https://github.com/Dimitri-dW/TechGroundsDevOpsRED/blob/iyadDev/ScreenShootsges/s3-4%20(1).png)
 
 4. After the request is complete, the Body section shows a JSON response. The uploadURL attribute contains the signed URL. Copy this attribute to the clipboard.
 5. Select the + icon next to the tabs to create a new request.
 6. Using the dropdown, change the method from GET to PUT. Paste the URL into the Enter request URL box.
 7. Choose the Body tab, then the binary radio button
 
-![alt text](https://github.com/Dimitri-dW/TechGroundsDevOpsRED/blob/iyadDev/images/s3-5.png)
+![alt text](https://github.com/Dimitri-dW/TechGroundsDevOpsRED/blob/iyadDev/ScreenShoots/s3-5.png)
 
 
 8. Choose Select file and choose a JPG file to upload.
 Choose Send. You see a 200 OK response after the file is uploaded.
 
 
-![alt text](https://github.com/Dimitri-dW/TechGroundsDevOpsRED/blob/iyadDev/images/s3-6.png)
+![alt text](https://github.com/Dimitri-dW/TechGroundsDevOpsRED/blob/iyadDev/ScreenShoots/s3-6.png)
 
 9. Navigate to the S3 console, and open the S3 bucket created by the deployment. In the bucket, you see the JPG file uploaded via Postman
 
 
-![alt text](https://github.com/Dimitri-dW/TechGroundsDevOpsRED/blob/iyadDev/images/s3-7.png)
+![alt text](https://github.com/Dimitri-dW/TechGroundsDevOpsRED/blob/iyadDev/ScreenShoots/s3-7.png)
