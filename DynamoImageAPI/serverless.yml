@@ -1,0 +1,67 @@
+service: Dynamo-Red-Cat
+
+frameworkVersion: "2.29.0"
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: eu-central-1
+  environment:
+    IMAGE_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource: "*"
+
+functions:
+  imageSubmission:
+    handler: api/image.submit
+    memorySize: 128
+    description: Submit image information.
+    events:
+      - http: 
+          path: images
+          method: post
+
+  listImages:
+    handler: api/image.listImages
+    memorySize: 128
+    description: List All Images 
+    events:
+      - http:
+         path: images
+         method: get
+         
+  imageDetails:
+    handler: api/image.get
+    events:
+      - http:
+          path: images/{id}
+          method: get
+
+
+resources:
+  Resources:
+    ImagesDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: "id"
+            AttributeType: "S"   
+        KeySchema:
+          -
+            AttributeName: "id"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        StreamSpecification:
+          StreamViewType: "NEW_AND_OLD_IMAGES"
+        TableName: ${self:provider.environment.IMAGE_TABLE}
