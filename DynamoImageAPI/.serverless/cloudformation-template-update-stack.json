@@ -71,22 +71,22 @@
         }
       }
     },
-    "CandidateSubmissionLogGroup": {
+    "ImageSubmissionLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
-        "LogGroupName": "/aws/lambda/candidate-service-dev-candidateSubmission"
+        "LogGroupName": "/aws/lambda/Dynamo-Red-Cat-dev-imageSubmission"
       }
     },
-    "ListCandidatesLogGroup": {
+    "ListImagesLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
-        "LogGroupName": "/aws/lambda/candidate-service-dev-listCandidates"
+        "LogGroupName": "/aws/lambda/Dynamo-Red-Cat-dev-listImages"
       }
     },
-    "CandidateDetailsLogGroup": {
+    "ImageDetailsLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
-        "LogGroupName": "/aws/lambda/candidate-service-dev-candidateDetails"
+        "LogGroupName": "/aws/lambda/Dynamo-Red-Cat-dev-imageDetails"
       }
     },
     "IamRoleLambdaExecution": {
@@ -114,7 +114,7 @@
               "Fn::Join": [
                 "-",
                 [
-                  "candidate-service",
+                  "Dynamo-Red-Cat",
                   "dev",
                   "lambda"
                 ]
@@ -131,7 +131,7 @@
                   ],
                   "Resource": [
                     {
-                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/candidate-service-dev*:*"
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Dynamo-Red-Cat-dev*:*"
                     }
                   ]
                 },
@@ -142,7 +142,7 @@
                   ],
                   "Resource": [
                     {
-                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/candidate-service-dev*:*:*"
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Dynamo-Red-Cat-dev*:*:*"
                     }
                   ]
                 },
@@ -165,7 +165,7 @@
           "Fn::Join": [
             "-",
             [
-              "candidate-service",
+              "Dynamo-Red-Cat",
               "dev",
               {
                 "Ref": "AWS::Region"
@@ -176,25 +176,25 @@
         }
       }
     },
-    "CandidateSubmissionLambdaFunction": {
+    "ImageSubmissionLambdaFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/candidate-service/dev/1615472905693-2021-03-11T14:28:25.693Z/candidate-service.zip"
+          "S3Key": "serverless/Dynamo-Red-Cat/dev/1615482147012-2021-03-11T17:02:27.012Z/Dynamo-Red-Cat.zip"
         },
-        "Handler": "api/candidate.submit",
+        "Handler": "api/image.submit",
         "Runtime": "nodejs12.x",
-        "FunctionName": "candidate-service-dev-candidateSubmission",
+        "FunctionName": "Dynamo-Red-Cat-dev-imageSubmission",
         "MemorySize": 128,
         "Timeout": 6,
-        "Description": "Submit candidate information and starts interview process.",
+        "Description": "Submit image information and starts interview process.",
         "Environment": {
           "Variables": {
-            "CANDIDATE_TABLE": "candidate-service-dev",
-            "CANDIDATE_EMAIL_TABLE": "candidate-email-dev"
+            "IMAGE_TABLE": "Dynamo-Red-Cat-dev",
+            "CANDIDATE__TABLE": "candidate-email-dev"
           }
         },
         "Role": {
@@ -205,28 +205,28 @@
         }
       },
       "DependsOn": [
-        "CandidateSubmissionLogGroup"
+        "ImageSubmissionLogGroup"
       ]
     },
-    "ListCandidatesLambdaFunction": {
+    "ListImagesLambdaFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/candidate-service/dev/1615472905693-2021-03-11T14:28:25.693Z/candidate-service.zip"
+          "S3Key": "serverless/Dynamo-Red-Cat/dev/1615482147012-2021-03-11T17:02:27.012Z/Dynamo-Red-Cat.zip"
         },
-        "Handler": "api/candidate.listCandidates",
+        "Handler": "api/image.listImages",
         "Runtime": "nodejs12.x",
-        "FunctionName": "candidate-service-dev-listCandidates",
+        "FunctionName": "Dynamo-Red-Cat-dev-listImages",
         "MemorySize": 128,
         "Timeout": 6,
-        "Description": "List All candidate",
+        "Description": "List All Images",
         "Environment": {
           "Variables": {
-            "CANDIDATE_TABLE": "candidate-service-dev",
-            "CANDIDATE_EMAIL_TABLE": "candidate-email-dev"
+            "IMAGE_TABLE": "Dynamo-Red-Cat-dev",
+            "CANDIDATE__TABLE": "candidate-email-dev"
           }
         },
         "Role": {
@@ -237,27 +237,27 @@
         }
       },
       "DependsOn": [
-        "ListCandidatesLogGroup"
+        "ListImagesLogGroup"
       ]
     },
-    "CandidateDetailsLambdaFunction": {
+    "ImageDetailsLambdaFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/candidate-service/dev/1615472905693-2021-03-11T14:28:25.693Z/candidate-service.zip"
+          "S3Key": "serverless/Dynamo-Red-Cat/dev/1615482147012-2021-03-11T17:02:27.012Z/Dynamo-Red-Cat.zip"
         },
-        "Handler": "api/candidate.get",
+        "Handler": "api/image.get",
         "Runtime": "nodejs12.x",
-        "FunctionName": "candidate-service-dev-candidateDetails",
+        "FunctionName": "Dynamo-Red-Cat-dev-imageDetails",
         "MemorySize": 1024,
         "Timeout": 6,
         "Environment": {
           "Variables": {
-            "CANDIDATE_TABLE": "candidate-service-dev",
-            "CANDIDATE_EMAIL_TABLE": "candidate-email-dev"
+            "IMAGE_TABLE": "Dynamo-Red-Cat-dev",
+            "CANDIDATE__TABLE": "candidate-email-dev"
           }
         },
         "Role": {
@@ -268,45 +268,45 @@
         }
       },
       "DependsOn": [
-        "CandidateDetailsLogGroup"
+        "ImageDetailsLogGroup"
       ]
     },
-    "CandidateSubmissionLambdaVersionyHaDCnvgr5bT8PNVzQKYmV1wfFnKsXWkGsB88ubsrBA": {
+    "ImageSubmissionLambdaVersionMktjZjxkMAJHCXW1EC2OLlT8PM9xmCwhYDtSbKIKXE": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
-          "Ref": "CandidateSubmissionLambdaFunction"
+          "Ref": "ImageSubmissionLambdaFunction"
         },
-        "CodeSha256": "hFd0r6JMrB5qEINwZEXscBKHZbFbTa524Lnt+xNaZLI=",
-        "Description": "Submit candidate information and starts interview process."
+        "CodeSha256": "k3Z7+nkA4osgzSicfGB/tN9iXmVHtkpT6MxnqVBTzUA=",
+        "Description": "Submit image information and starts interview process."
       }
     },
-    "CandidateDetailsLambdaVersioncx9UtjbBDYZokzh6r2WUxXiYEjEbyusUpwK2lKNAs": {
+    "ListImagesLambdaVersion5dVaBJlbU78PjAlHSKldNA1VVHJjJn5cfmRdlVK0": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
-          "Ref": "CandidateDetailsLambdaFunction"
+          "Ref": "ListImagesLambdaFunction"
         },
-        "CodeSha256": "hFd0r6JMrB5qEINwZEXscBKHZbFbTa524Lnt+xNaZLI="
+        "CodeSha256": "k3Z7+nkA4osgzSicfGB/tN9iXmVHtkpT6MxnqVBTzUA=",
+        "Description": "List All Images"
       }
     },
-    "ListCandidatesLambdaVersionxbE5pYocYiA0jQS5OBkMOtdWru8HmgA0Lmmg89Tw6GU": {
+    "ImageDetailsLambdaVersionRot115l2NQUUCXUS1Oj9hnibAsd64YhOvY7ilrEF7U": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
-          "Ref": "ListCandidatesLambdaFunction"
+          "Ref": "ImageDetailsLambdaFunction"
         },
-        "CodeSha256": "hFd0r6JMrB5qEINwZEXscBKHZbFbTa524Lnt+xNaZLI=",
-        "Description": "List All candidate"
+        "CodeSha256": "k3Z7+nkA4osgzSicfGB/tN9iXmVHtkpT6MxnqVBTzUA="
       }
     },
     "ApiGatewayRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Name": "dev-candidate-service",
+        "Name": "dev-Dynamo-Red-Cat",
         "EndpointConfiguration": {
           "Types": [
             "EDGE"
@@ -315,7 +315,7 @@
         "Policy": ""
       }
     },
-    "ApiGatewayResourceCandidates": {
+    "ApiGatewayResourceImages": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
@@ -324,17 +324,17 @@
             "RootResourceId"
           ]
         },
-        "PathPart": "candidates",
+        "PathPart": "images",
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
         }
       }
     },
-    "ApiGatewayResourceCandidatesIdVar": {
+    "ApiGatewayResourceImagesIdVar": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
-          "Ref": "ApiGatewayResourceCandidates"
+          "Ref": "ApiGatewayResourceImages"
         },
         "PathPart": "{id}",
         "RestApiId": {
@@ -342,13 +342,13 @@
         }
       }
     },
-    "ApiGatewayMethodCandidatesPost": {
+    "ApiGatewayMethodImagesPost": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "HttpMethod": "POST",
         "RequestParameters": {},
         "ResourceId": {
-          "Ref": "ApiGatewayResourceCandidates"
+          "Ref": "ApiGatewayResourceImages"
         },
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
@@ -373,7 +373,7 @@
                 ":lambda:path/2015-03-31/functions/",
                 {
                   "Fn::GetAtt": [
-                    "CandidateSubmissionLambdaFunction",
+                    "ImageSubmissionLambdaFunction",
                     "Arn"
                   ]
                 },
@@ -385,13 +385,13 @@
         "MethodResponses": []
       }
     },
-    "ApiGatewayMethodCandidatesGet": {
+    "ApiGatewayMethodImagesGet": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "HttpMethod": "GET",
         "RequestParameters": {},
         "ResourceId": {
-          "Ref": "ApiGatewayResourceCandidates"
+          "Ref": "ApiGatewayResourceImages"
         },
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
@@ -416,7 +416,7 @@
                 ":lambda:path/2015-03-31/functions/",
                 {
                   "Fn::GetAtt": [
-                    "ListCandidatesLambdaFunction",
+                    "ListImagesLambdaFunction",
                     "Arn"
                   ]
                 },
@@ -428,13 +428,13 @@
         "MethodResponses": []
       }
     },
-    "ApiGatewayMethodCandidatesIdVarGet": {
+    "ApiGatewayMethodImagesIdVarGet": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "HttpMethod": "GET",
         "RequestParameters": {},
         "ResourceId": {
-          "Ref": "ApiGatewayResourceCandidatesIdVar"
+          "Ref": "ApiGatewayResourceImagesIdVar"
         },
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
@@ -459,7 +459,7 @@
                 ":lambda:path/2015-03-31/functions/",
                 {
                   "Fn::GetAtt": [
-                    "CandidateDetailsLambdaFunction",
+                    "ImageDetailsLambdaFunction",
                     "Arn"
                   ]
                 },
@@ -471,7 +471,7 @@
         "MethodResponses": []
       }
     },
-    "ApiGatewayDeployment1615472900222": {
+    "ApiGatewayDeployment1615482143113": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -480,17 +480,17 @@
         "StageName": "dev"
       },
       "DependsOn": [
-        "ApiGatewayMethodCandidatesPost",
-        "ApiGatewayMethodCandidatesGet",
-        "ApiGatewayMethodCandidatesIdVarGet"
+        "ApiGatewayMethodImagesPost",
+        "ApiGatewayMethodImagesGet",
+        "ApiGatewayMethodImagesIdVarGet"
       ]
     },
-    "CandidateSubmissionLambdaPermissionApiGateway": {
+    "ImageSubmissionLambdaPermissionApiGateway": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "FunctionName": {
           "Fn::GetAtt": [
-            "CandidateSubmissionLambdaFunction",
+            "ImageSubmissionLambdaFunction",
             "Arn"
           ]
         },
@@ -522,12 +522,12 @@
         }
       }
     },
-    "ListCandidatesLambdaPermissionApiGateway": {
+    "ListImagesLambdaPermissionApiGateway": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "FunctionName": {
           "Fn::GetAtt": [
-            "ListCandidatesLambdaFunction",
+            "ListImagesLambdaFunction",
             "Arn"
           ]
         },
@@ -559,12 +559,12 @@
         }
       }
     },
-    "CandidateDetailsLambdaPermissionApiGateway": {
+    "ImageDetailsLambdaPermissionApiGateway": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "FunctionName": {
           "Fn::GetAtt": [
-            "CandidateDetailsLambdaFunction",
+            "ImageDetailsLambdaFunction",
             "Arn"
           ]
         },
@@ -596,7 +596,7 @@
         }
       }
     },
-    "CandidatesDynamoDbTable": {
+    "ImagesDynamoDbTable": {
       "Type": "AWS::DynamoDB::Table",
       "DeletionPolicy": "Retain",
       "Properties": {
@@ -619,7 +619,7 @@
         "StreamSpecification": {
           "StreamViewType": "NEW_AND_OLD_IMAGES"
         },
-        "TableName": "candidate-service-dev"
+        "TableName": "Dynamo-Red-Cat-dev"
       }
     }
   },
@@ -629,22 +629,22 @@
         "Ref": "ServerlessDeploymentBucket"
       }
     },
-    "CandidateSubmissionLambdaFunctionQualifiedArn": {
+    "ImageSubmissionLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "CandidateSubmissionLambdaVersionyHaDCnvgr5bT8PNVzQKYmV1wfFnKsXWkGsB88ubsrBA"
+        "Ref": "ImageSubmissionLambdaVersionMktjZjxkMAJHCXW1EC2OLlT8PM9xmCwhYDtSbKIKXE"
       }
     },
-    "CandidateDetailsLambdaFunctionQualifiedArn": {
+    "ListImagesLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "CandidateDetailsLambdaVersioncx9UtjbBDYZokzh6r2WUxXiYEjEbyusUpwK2lKNAs"
+        "Ref": "ListImagesLambdaVersion5dVaBJlbU78PjAlHSKldNA1VVHJjJn5cfmRdlVK0"
       }
     },
-    "ListCandidatesLambdaFunctionQualifiedArn": {
+    "ImageDetailsLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "ListCandidatesLambdaVersionxbE5pYocYiA0jQS5OBkMOtdWru8HmgA0Lmmg89Tw6GU"
+        "Ref": "ImageDetailsLambdaVersionRot115l2NQUUCXUS1Oj9hnibAsd64YhOvY7ilrEF7U"
       }
     },
     "ServiceEndpoint": {

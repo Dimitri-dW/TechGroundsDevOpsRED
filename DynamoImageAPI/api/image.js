@@ -9,23 +9,22 @@ const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 module.exports.submit = (event, context, callback) => {
   const requestBody = JSON.parse(event.body);
-  const fullname = requestBody.fullname;
-  const email = requestBody.email;
-  const experience = requestBody.experience;
+  const imgeUrl = requestBody.imgeUrl;
+  const title = requestBody.title;
 
-  if (typeof fullname !== 'string' || typeof email !== 'string' || typeof experience !== 'number') {
+  if (typeof imgeUrl !== 'string' || typeof title !== 'string') {
     console.error('Validation Failed');
-    callback(new Error('Couldn\'t submit candidate because of validation errors.'));
+    callback(new Error('Couldn\'t submit image because of validation errors.'));
     return;
   }
 
-  submitCandidateP(candidateInfo(fullname, email, experience))
+  submitImage(imageInfo(imgeUrl, title))
     .then(res => {
       callback(null, {
         statusCode: 200,
         body: JSON.stringify({
-          message: `Sucessfully submitted candidate with email ${email}`,
-          candidateId: res.id
+          message: `Sucessfully submitted Image with title ${title}`,
+          imageId: res.id
         })
       });
     })
@@ -34,30 +33,29 @@ module.exports.submit = (event, context, callback) => {
       callback(null, {
         statusCode: 500,
         body: JSON.stringify({
-          message: `Unable to submit candidate with email ${email}`
+          message: `Unable to submit image with title ${title}`
         })
       })
     });
 };
 
 
-const submitCandidateP = candidate => {
-  console.log('Submitting candidate');
-  const candidateInfo = {
-    TableName: process.env.CANDIDATE_TABLE,
-    Item: candidate,
+const submitImage = image => {
+  console.log('Submitting image');
+  const imageInfo = {
+    TableName: process.env.IMAGE_TABLE,
+    Item: image,
   };
-  return dynamoDb.put(candidateInfo).promise()
-    .then(res => candidate);
+  return dynamoDb.put(imageInfo).promise()
+    .then(res => image);
 };
 
-const candidateInfo = (fullname, email, experience) => {
+const imageInfo = (imgeUrl, title) => {
   const timestamp = new Date().getTime();
   return {
     id: uuid.v1(),
-    fullname: fullname,
-    email: email,
-    experience: experience,
+    imgeUrl: imgeUrl,
+    title: title,
     submittedAt: timestamp,
     updatedAt: timestamp,
   };
@@ -67,12 +65,12 @@ module.exports.listImages = (event,context,callback) =>{
 
   var parms =  {
 
-    TableName: process.env.CANDIDATE_TABLE,
-    ProjectionExpression: "id, fullname,email"
+    TableName: process.env.IMAGE_TABLE,
+    ProjectionExpression: "id, imgeUrl,title"
 
   };
 
-  console.log("Scaning Candidate table");
+  console.log("Scaning image table");
   const onScan = (err, data) =>{
           
         if(err){
@@ -84,7 +82,7 @@ module.exports.listImages = (event,context,callback) =>{
           {
             statusCode: 200,
             body:JSON.stringify({
-              candidates: data.Items
+              images: data.Items
             })
 
           });
@@ -97,7 +95,7 @@ module.exports.listImages = (event,context,callback) =>{
 
 module.exports.get = (event, context, callback) => {
   const params = {
-    TableName: process.env.CANDIDATE_TABLE,
+    TableName: process.env.IMAGE_TABLE,
     Key: {
       id: event.pathParameters.id,
     },
@@ -113,7 +111,7 @@ module.exports.get = (event, context, callback) => {
     })
     .catch(error => {
       console.error(error);
-      callback(new Error('Couldn\'t fetch candidate.'));
+      callback(new Error('Couldn\'t fetch image.'));
       return;
     });
 };

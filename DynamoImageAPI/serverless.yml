@@ -1,4 +1,4 @@
-service: Dynamo-Red-Cat_Image
+service: Dynamo-Red-Cat
 
 frameworkVersion: "2.29.0"
 
@@ -8,8 +8,7 @@ provider:
   stage: dev
   region: eu-central-1
   environment:
-    CANDIDATE_TABLE: ${self:service}-${opt:stage, self:provider.stage}
-    CANDIDATE_EMAIL_TABLE: "candidate-email-${opt:stage, self:provider.stage}"
+    IMAGE_TABLE: ${self:service}-${opt:stage, self:provider.stage}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -20,16 +19,16 @@ provider:
       Resource: "*"
 
 functions:
-  candidateSubmission:
+  imageSubmission:
     handler: api/image.submit
     memorySize: 128
-    description: Submit candidate information and starts interview process.
+    description: Submit image information.
     events:
       - http: 
           path: images
           method: post
 
-  listCandidates:
+  listImages:
     handler: api/image.listImages
     memorySize: 128
     description: List All Images 
@@ -38,7 +37,7 @@ functions:
          path: images
          method: get
          
-  candidateDetails:
+  imageDetails:
     handler: api/image.get
     events:
       - http:
@@ -48,7 +47,7 @@ functions:
 
 resources:
   Resources:
-    CandidatesDynamoDbTable:
+    ImagesDynamoDbTable:
       Type: 'AWS::DynamoDB::Table'
       DeletionPolicy: Retain
       Properties:
@@ -65,4 +64,4 @@ resources:
           WriteCapacityUnits: 1
         StreamSpecification:
           StreamViewType: "NEW_AND_OLD_IMAGES"
-        TableName: ${self:provider.environment.CANDIDATE_TABLE}
+        TableName: ${self:provider.environment.IMAGE_TABLE}
