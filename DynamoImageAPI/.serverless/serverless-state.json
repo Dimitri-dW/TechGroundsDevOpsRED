@@ -10,8 +10,7 @@
       "stage": "dev",
       "region": "eu-central-1",
       "environment": {
-        "IMAGE_TABLE": "Dynamo-Red-Cat-dev",
-        "CANDIDATE__TABLE": "candidate-email-dev"
+        "IMAGE_TABLE": "Dynamo-Red-Cat-dev"
       },
       "iamRoleStatements": [
         {
@@ -205,18 +204,17 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/Dynamo-Red-Cat/dev/1615482147012-2021-03-11T17:02:27.012Z/Dynamo-Red-Cat.zip"
+                "S3Key": "serverless/Dynamo-Red-Cat/dev/1615542972227-2021-03-12T09:56:12.227Z/Dynamo-Red-Cat.zip"
               },
               "Handler": "api/image.submit",
               "Runtime": "nodejs12.x",
               "FunctionName": "Dynamo-Red-Cat-dev-imageSubmission",
               "MemorySize": 128,
               "Timeout": 6,
-              "Description": "Submit image information and starts interview process.",
+              "Description": "Submit image information.",
               "Environment": {
                 "Variables": {
-                  "IMAGE_TABLE": "Dynamo-Red-Cat-dev",
-                  "CANDIDATE__TABLE": "candidate-email-dev"
+                  "IMAGE_TABLE": "Dynamo-Red-Cat-dev"
                 }
               },
               "Role": {
@@ -237,7 +235,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/Dynamo-Red-Cat/dev/1615482147012-2021-03-11T17:02:27.012Z/Dynamo-Red-Cat.zip"
+                "S3Key": "serverless/Dynamo-Red-Cat/dev/1615542972227-2021-03-12T09:56:12.227Z/Dynamo-Red-Cat.zip"
               },
               "Handler": "api/image.listImages",
               "Runtime": "nodejs12.x",
@@ -247,8 +245,7 @@
               "Description": "List All Images",
               "Environment": {
                 "Variables": {
-                  "IMAGE_TABLE": "Dynamo-Red-Cat-dev",
-                  "CANDIDATE__TABLE": "candidate-email-dev"
+                  "IMAGE_TABLE": "Dynamo-Red-Cat-dev"
                 }
               },
               "Role": {
@@ -269,7 +266,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/Dynamo-Red-Cat/dev/1615482147012-2021-03-11T17:02:27.012Z/Dynamo-Red-Cat.zip"
+                "S3Key": "serverless/Dynamo-Red-Cat/dev/1615542972227-2021-03-12T09:56:12.227Z/Dynamo-Red-Cat.zip"
               },
               "Handler": "api/image.get",
               "Runtime": "nodejs12.x",
@@ -278,8 +275,7 @@
               "Timeout": 6,
               "Environment": {
                 "Variables": {
-                  "IMAGE_TABLE": "Dynamo-Red-Cat-dev",
-                  "CANDIDATE__TABLE": "candidate-email-dev"
+                  "IMAGE_TABLE": "Dynamo-Red-Cat-dev"
                 }
               },
               "Role": {
@@ -293,36 +289,36 @@
               "ImageDetailsLogGroup"
             ]
           },
-          "ImageSubmissionLambdaVersionMktjZjxkMAJHCXW1EC2OLlT8PM9xmCwhYDtSbKIKXE": {
+          "ImageSubmissionLambdaVersionWC4509MGiDjtB0PF4ogkJ0CCnHAUvBcAsBbQ0P74QFw": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "ImageSubmissionLambdaFunction"
               },
-              "CodeSha256": "k3Z7+nkA4osgzSicfGB/tN9iXmVHtkpT6MxnqVBTzUA=",
-              "Description": "Submit image information and starts interview process."
+              "CodeSha256": "Rs8XvNFMox6cUPm6mLIKrW2UwaQFGcLKaRi7oFiPDf4=",
+              "Description": "Submit image information."
             }
           },
-          "ListImagesLambdaVersion5dVaBJlbU78PjAlHSKldNA1VVHJjJn5cfmRdlVK0": {
+          "ListImagesLambdaVersionzQVsGRGpo0adRCmPH5nY5FpFVD9qar8Orrb37SBcheQ": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "ListImagesLambdaFunction"
               },
-              "CodeSha256": "k3Z7+nkA4osgzSicfGB/tN9iXmVHtkpT6MxnqVBTzUA=",
+              "CodeSha256": "Rs8XvNFMox6cUPm6mLIKrW2UwaQFGcLKaRi7oFiPDf4=",
               "Description": "List All Images"
             }
           },
-          "ImageDetailsLambdaVersionRot115l2NQUUCXUS1Oj9hnibAsd64YhOvY7ilrEF7U": {
+          "ImageDetailsLambdaVersioniteakRwhvYw32l5m90g7VLjHR2fUeHjcL4cpIdgiE": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "ImageDetailsLambdaFunction"
               },
-              "CodeSha256": "k3Z7+nkA4osgzSicfGB/tN9iXmVHtkpT6MxnqVBTzUA="
+              "CodeSha256": "Rs8XvNFMox6cUPm6mLIKrW2UwaQFGcLKaRi7oFiPDf4="
             }
           },
           "ApiGatewayRestApi": {
@@ -493,7 +489,7 @@
               "MethodResponses": []
             }
           },
-          "ApiGatewayDeployment1615482143113": {
+          "ApiGatewayDeployment1615542860768": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -654,19 +650,19 @@
           "ImageSubmissionLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "ImageSubmissionLambdaVersionMktjZjxkMAJHCXW1EC2OLlT8PM9xmCwhYDtSbKIKXE"
+              "Ref": "ImageSubmissionLambdaVersionWC4509MGiDjtB0PF4ogkJ0CCnHAUvBcAsBbQ0P74QFw"
             }
           },
           "ListImagesLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "ListImagesLambdaVersion5dVaBJlbU78PjAlHSKldNA1VVHJjJn5cfmRdlVK0"
+              "Ref": "ListImagesLambdaVersionzQVsGRGpo0adRCmPH5nY5FpFVD9qar8Orrb37SBcheQ"
             }
           },
           "ImageDetailsLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "ImageDetailsLambdaVersionRot115l2NQUUCXUS1Oj9hnibAsd64YhOvY7ilrEF7U"
+              "Ref": "ImageDetailsLambdaVersioniteakRwhvYw32l5m90g7VLjHR2fUeHjcL4cpIdgiE"
             }
           },
           "ServiceEndpoint": {
@@ -783,7 +779,7 @@
       "imageSubmission": {
         "handler": "api/image.submit",
         "memorySize": 128,
-        "description": "Submit image information and starts interview process.",
+        "description": "Submit image information.",
         "events": [
           {
             "http": {
@@ -799,7 +795,7 @@
         "timeout": 6,
         "runtime": "nodejs12.x",
         "vpc": {},
-        "versionLogicalId": "ImageSubmissionLambdaVersionMktjZjxkMAJHCXW1EC2OLlT8PM9xmCwhYDtSbKIKXE"
+        "versionLogicalId": "ImageSubmissionLambdaVersionWC4509MGiDjtB0PF4ogkJ0CCnHAUvBcAsBbQ0P74QFw"
       },
       "listImages": {
         "handler": "api/image.listImages",
@@ -820,7 +816,7 @@
         "timeout": 6,
         "runtime": "nodejs12.x",
         "vpc": {},
-        "versionLogicalId": "ListImagesLambdaVersion5dVaBJlbU78PjAlHSKldNA1VVHJjJn5cfmRdlVK0"
+        "versionLogicalId": "ListImagesLambdaVersionzQVsGRGpo0adRCmPH5nY5FpFVD9qar8Orrb37SBcheQ"
       },
       "imageDetails": {
         "handler": "api/image.get",
@@ -839,7 +835,7 @@
         "timeout": 6,
         "runtime": "nodejs12.x",
         "vpc": {},
-        "versionLogicalId": "ImageDetailsLambdaVersionRot115l2NQUUCXUS1Oj9hnibAsd64YhOvY7ilrEF7U"
+        "versionLogicalId": "ImageDetailsLambdaVersioniteakRwhvYw32l5m90g7VLjHR2fUeHjcL4cpIdgiE"
       }
     },
     "resources": {
@@ -895,7 +891,7 @@
     "artifact": "C:\\Users\\TechGrounds\\Desktop\\TechGroundsDevOpsRED\\DynamoImageAPI\\.serverless\\Dynamo-Red-Cat.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/Dynamo-Red-Cat/dev/1615482147012-2021-03-11T17:02:27.012Z",
+    "artifactDirectoryName": "serverless/Dynamo-Red-Cat/dev/1615542972227-2021-03-12T09:56:12.227Z",
     "artifact": "Dynamo-Red-Cat.zip"
   }
 }
