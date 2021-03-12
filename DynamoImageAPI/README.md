@@ -1,9 +1,7 @@
 # DynamoDb rest api DevOps project RED Team 
 
-This Project application shows how to upload objects to S3 directly from your end-user application using Signed URLs.
+REST API in Node.js with AWS Lambda, API Gateway, DynamoDB, and Serverless Framework
 
-
-![alt text](https://github.com/Dimitri-dW/TechGroundsDevOpsRED/blob/iyadDev/images/SolutionDiagram.png)
 
 
 
@@ -20,3 +18,32 @@ This Project application shows how to upload objects to S3 directly from your en
 $ npm install serverless -g
 
 2. Clone the repo onto your local development machine using `git clone`.
+
+## Create a REST Resource for Submitting Images
+
+`sls deploy`
+
+## Saving Image Data to DynamoDB
+
+`{"imgeUrl":"Image URL",
+   "title": "cat red"}`
+
+   `$ curl -H "Content-Type: application/json" -X POST -d '{"imageUrl":"S3 Image Url","title": "Image Title"}' https://05ccffiraa.execute-api.us-east-1.amazonaws.com/dev/images`
+
+
+
+   
+
+
+## Get All Images
+
+`$ curl -H "Content-Type: application/json" -X GET  https://05ccffiraa.execute-api.us-east-1.amazonaws.com/dev/images`
+
+
+## Get Images By ID
+
+`$ curl -H "Content-Type: application/json" -X GET  https://05ccffiraa.execute-api.us-east-1.amazonaws.com/dev/images/{id}`
+
+
+
+
